@@ -1,3 +1,4 @@
+import math
 import matplotlib.pyplot as plt
 import numpy as np
 import random
@@ -5,38 +6,71 @@ import random
 SIZE = 500
 
 
-def generate_balls(count: int) -> np.ndarray:
-    coords = SIZE * np.random.rand(2, count)
-    print(coords)
+def generate_balls(count: int, radius: float) -> np.ndarray:
+    rad_int = math.ceil(radius)
+    x = np.random.randint(rad_int, SIZE - rad_int, [count])
+    y = np.zeros(count)
+    v = np.random.randint(0, 3, [count])
 
-    for i in range(len(coords[1])):
-        if coords[1, i] > (max := bound_func(coords[1, i])):
-            coords[1, i] = random.randint(0, int(max))
+    for i, x_0 in enumerate(x):
+        max = bound_func(x_0, radius)
+        y[i] = random.randint(math.ceil(radius), int(max))
+        while 1 in collide_check(np.array([x, y]), radius)[i]:
+            y[i] = random.randint(0, int(max))
 
-    return coords
+    return np.array([x, y, v])
 
 
-def bound_func(x: int) -> float:
+def bound_func(x: float, radius: float) -> float:
     if x > SIZE / 2:
-        return -1 * x + SIZE * 3 / 2
-    return x + int(SIZE / 2)
+        return -1 * x + SIZE * 3 / 2 - radius
+    return x + int(SIZE / 2) - radius
 
 
-def bound_eval(x: np.ndarray):
-    return np.ndarray(list(map(bound_func, int(x))))
+def collide_check(balls: np.ndarray, radius: float):
+    size = len(balls[0])
+    collisions = np.zeros([size, size])
+    for i in range(len(balls[0])):
+        for j in range(len(balls[0])):
+            if i != j:
+                collisions[i, j] = (
+                    1
+                    if (
+                        math.sqrt(
+                            (balls[0, i] - balls[0, j]) ** 2
+                            + (balls[1, i] - balls[1, j]) ** 2
+                        )
+                    )
+                    <= 2 * radius
+                    else 0
+                )
+            else:
+                collisions[i, j] = 0
+    return collisions
 
 
 def draw():
     fig, ax = plt.subplots()
-    ax.plot([0, SIZE / 2], [SIZE / 2, SIZE])
-    ax.plot([SIZE / 2, SIZE], [SIZE, SIZE / 2])
-    ax.set_xlim(left=0, right=500)
-    ax.set_ylim(top=500, bottom=0)
 
-    balls = generate_balls(10)
+    count = 10
+    radius = 5
+
     while plt.fignum_exists(fig.number):  # type: ignore
-        ax.plot(balls[0], balls[1], "bo")
-        plt.pause(1)
+        # Reset plot
+        ax.cla()
+
+        # Plot boundaries
+        ax.plot([0, SIZE / 2], [SIZE / 2, SIZE], "b")
+        ax.plot([SIZE / 2, SIZE], [SIZE, SIZE / 2], "b")
+        ax.set_xlim(left=0, right=500)
+        ax.set_ylim(top=500, bottom=0)
+
+        # Plot Balls
+        balls = generate_balls(count, radius)
+        ax.plot(balls[0], balls[1], "bo", markersize=radius)
+
+        # Show graph
+        plt.pause(0.016667)
 
 
 def run():
