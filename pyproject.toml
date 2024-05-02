@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "digifinal"
+version = "0.1.0"
+description = ""
+authors = ["Isaac Spencer <22ispencer@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+matplotlib = "^3.8.4"
+
+[tool.poetry.scripts]
+digifinal = "digifinal.main:run"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
