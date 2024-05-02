@@ -6,11 +6,12 @@ import random
 SIZE = 500
 
 
-def generate_balls(count: int, radius: float) -> np.ndarray:
-    rad_int = math.ceil(radius)
-    x = np.random.randint(rad_int, SIZE - rad_int, [count])
+def generate_balls(count: int, radius: int) -> np.ndarray:
+    x = np.random.randint(radius, SIZE - radius, [count])
     y = np.zeros(count)
-    v = np.random.randint(0, 3, [count])
+    theta = np.random.random([count]) * np.pi
+    v_x = np.sin(theta)
+    v_y = np.cos(theta)
 
     for i, x_0 in enumerate(x):
         max = bound_func(x_0, radius)
@@ -18,7 +19,7 @@ def generate_balls(count: int, radius: float) -> np.ndarray:
         while 1 in collide_check(np.array([x, y]), radius)[i]:
             y[i] = random.randint(0, int(max))
 
-    return np.array([x, y, v])
+    return np.array([x, y, v_x, v_y])
 
 
 def bound_func(x: float, radius: float) -> float:
@@ -49,13 +50,46 @@ def collide_check(balls: np.ndarray, radius: float):
     return collisions
 
 
+def move(balls: np.ndarray, radius: int, count: int):
+    collisions = collide_check(balls, radius)
+    balls_copy = balls.copy()
+    for i in range(count):
+        # Ball collisions
+        for j, hit in enumerate(collisions[i]):
+            if hit:
+                balls[2, i] = -balls_copy[2, j]
+                balls[3, i] = -balls_copy[3, j]
+
+        # Left/Right wall collision
+        if not (radius < balls[0, i] < SIZE - radius):
+            balls[2, i] = -balls[2, i]
+        # Bottom Wall Collision
+        if not (radius < balls[1, i]):
+            balls[3, i] = -balls[3, i]
+        # Top (V) wall collision
+        if not (balls[1, i] < bound_func(balls[0, i], radius)):
+            old_v_x = balls[2, i]
+            old_v_y = balls[3, i]
+            if balls[0, i] < SIZE / 2:
+                balls[2, i] = old_v_y
+                balls[3, i] = old_v_x
+            else:
+                balls[2, i] = -old_v_y
+                balls[3, i] = -old_v_x
+        balls[0, i] += balls[2, i]
+        balls[1, i] += balls[3, i]
+
+
 def draw():
     fig, ax = plt.subplots()
 
     count = 10
     radius = 5
+    fps = 120
 
+    balls = generate_balls(count, radius)
     while plt.fignum_exists(fig.number):  # type: ignore
+        move(balls, radius, count)
         # Reset plot
         ax.cla()
 
@@ -66,11 +100,10 @@ def draw():
         ax.set_ylim(top=500, bottom=0)
 
         # Plot Balls
-        balls = generate_balls(count, radius)
         ax.plot(balls[0], balls[1], "bo", markersize=radius)
 
         # Show graph
-        plt.pause(0.016667)
+        plt.pause(1 / fps)
 
 
 def run():
