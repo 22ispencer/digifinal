@@ -67,12 +67,28 @@ def move(balls: np.ndarray, radius: int, count: int):
         if not (radius < balls[1, i]):
             balls[3, i] = -balls[3, i]
         # Top (V) wall collision
-        if not (balls[1, i] < bound_func(balls[0, i], radius)):
+        if not (balls[1, i] < (max := bound_func(balls[0, i], radius))):
             old_v_x = balls[2, i]
             old_v_y = balls[3, i]
-            if balls[0, i] < SIZE / 2:
+            # Left portal
+            if SIZE / 6 < balls[0, i] < SIZE / 3:
+                balls[2, i] = -old_v_y
+                balls[3, i] = -old_v_x
+                # Change x
+                balls[0, i] = 3 / 2 * SIZE - balls[1, i]
+                balls[1, i] = max - radius
+            # Left side
+            elif balls[0, i] < SIZE / 2:
                 balls[2, i] = old_v_y
                 balls[3, i] = old_v_x
+            # Right portal
+            elif SIZE * 2 / 3 < balls[0, i] < SIZE * 5 / 6:
+                balls[2, i] = old_v_y
+                balls[3, i] = -old_v_x
+                # Change x
+                balls[0, i] = balls[1, i] - SIZE / 2
+                balls[1, i] = max - radius
+            # Right sid
             else:
                 balls[2, i] = -old_v_y
                 balls[3, i] = -old_v_x
@@ -96,6 +112,8 @@ def draw():
         # Plot boundaries
         ax.plot([0, SIZE / 2], [SIZE / 2, SIZE], "b")
         ax.plot([SIZE / 2, SIZE], [SIZE, SIZE / 2], "b")
+        ax.plot([SIZE / 6, SIZE / 3], [SIZE * 2 / 3, SIZE * 5 / 6], "r")
+        ax.plot([SIZE * 2 / 3, SIZE * 5 / 6], [SIZE * 5 / 6, SIZE * 2 / 3], "r")
         ax.set_xlim(left=0, right=500)
         ax.set_ylim(top=500, bottom=0)
 
